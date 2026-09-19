@@ -6,8 +6,6 @@
    3. Datos de personajes
    4. Retratos (.jpg / .png con respaldo a iniciales)
    5. Rejilla y filtros
-   6. Widget flotante de música (abrir/cerrar)
-   7. Reproductor de música
    ============================================================ */
 
 /* ============================================================
@@ -272,117 +270,6 @@ function pintarPersonajes(){
 busqueda.addEventListener('input', pintarPersonajes);
 filtro.addEventListener('change', pintarPersonajes);
 pintarPersonajes();
-
-
-/* ============================================================
-   5. WIDGET FLOTANTE DE MÚSICA — abrir / cerrar
-   El botón redondo se ve siempre en la esquina; al pulsarlo se
-   abre el panel con los controles. Se cierra con la X, con
-   Escape, o al tocar fuera del panel.
-   ============================================================ */
-const botonMusica  = document.getElementById('botonMusica');
-const panelMusica   = document.getElementById('panelMusica');
-const cerrarMusica  = document.getElementById('cerrarMusica');
-
-function abrirPanelMusica(){
-  panelMusica.hidden = false;
-  botonMusica.setAttribute('aria-expanded','true');
-}
-function cerrarPanelMusica(){
-  panelMusica.hidden = true;
-  botonMusica.setAttribute('aria-expanded','false');
-}
-function alternarPanelMusica(){
-  if (panelMusica.hidden) abrirPanelMusica();
-  else cerrarPanelMusica();
-}
-
-botonMusica.addEventListener('click', alternarPanelMusica);
-cerrarMusica.addEventListener('click', cerrarPanelMusica);
-
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape' && !panelMusica.hidden) cerrarPanelMusica();
-});
-document.addEventListener('click', e => {
-  const dentroDelWidget = e.target.closest('#reproductorFlotante');
-  if (!dentroDelWidget && !panelMusica.hidden) cerrarPanelMusica();
-});
-
-
-/* ============================================================
-   6. REPRODUCTOR DE MÚSICA
-   La playlist se edita únicamente aquí, en el código — el panel
-   flotante solo sirve para controlar la reproducción (pausar,
-   cambiar de pista, orden aleatorio), no para añadir ni quitar
-   canciones. Coloca tus archivos en la carpeta audio/.
-   Al terminar una pista pasa a la siguiente sin pausa.
-   ============================================================ */
-const PLAYLIST = [
-  { titulo:"Uma Musume - Trainer Archives",        artista:"Umamusume: Pretty Derby Original Soundtrack", src:"audio/pista-01.mp3" },
-  { titulo:"Winning The Soul", artista:"Umamusume: Pretty Derby Original Soundtrack", src:"audio/pista-02.mp3" },
-  { titulo:"Tracen Academy (Day)",          artista:"Umamusume: Pretty Derby Original Soundtrack", src:"audio/pista-03.mp3" },
-  { titulo:"BRIGHTEST HEART (Instrumental)",       artista:"Umamusume Cinderella Gray Series Original Soundtrack", src:"audio/pista-04.mp3" }
-];
-
-const audio       = document.getElementById('audio');
-const disco       = document.getElementById('disco');
-const tituloPista = document.getElementById('tituloPista');
-const artistaPista= document.getElementById('artistaPista');
-const btnPlay     = document.getElementById('btnPlay');
-const btnPrev     = document.getElementById('btnPrev');
-const btnNext     = document.getElementById('btnNext');
-
-const ICONO_PLAY  = '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5.5v13a1 1 0 0 0 1.53.85l10-6.5a1 1 0 0 0 0-1.7l-10-6.5A1 1 0 0 0 8 5.5Z"/></svg>';
-const ICONO_PAUSA = '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><rect x="6.5" y="5" width="4" height="14" rx="1.3"/><rect x="13.5" y="5" width="4" height="14" rx="1.3"/></svg>';
-
-let indice = 0;
-let aleatorio = false;
-audio.volume = 0.7; // sin control de volumen en el panel; ajusta este valor si quieres otro por defecto
-
-function cargarPista(i, reproducir = true){
-  if (!PLAYLIST.length) return;
-  indice = (i + PLAYLIST.length) % PLAYLIST.length;
-  const p = PLAYLIST[indice];
-  audio.src = p.src;
-  tituloPista.textContent  = p.titulo;
-  artistaPista.textContent = p.artista;
-  if (reproducir) audio.play().catch(() => {/* el navegador exige un clic previo */});
-}
-
-function siguiente(){
-  if (!PLAYLIST.length) return;
-  if (aleatorio && PLAYLIST.length > 1){
-    let n;
-    do { n = Math.floor(Math.random() * PLAYLIST.length); } while (n === indice);
-    cargarPista(n);
-  } else {
-    cargarPista(indice + 1);
-  }
-}
-
-btnPlay.addEventListener('click', () => {
-  if (audio.paused) audio.play().catch(()=>{});
-  else audio.pause();
-});
-btnPrev.addEventListener('click', () => {
-  if (audio.currentTime > 3) audio.currentTime = 0;
-  else cargarPista(indice - 1);
-});
-btnNext.addEventListener('click', siguiente);
-
-/* Cambio instantáneo al acabar la pista */
-audio.addEventListener('ended', siguiente);
-
-/* Si un archivo falta o está corrupto, salta al siguiente en vez de bloquearse */
-audio.addEventListener('error', () => {
-  if (audio.src && PLAYLIST.length) setTimeout(siguiente, 400);
-});
-
-audio.addEventListener('play',  () => { btnPlay.innerHTML = ICONO_PAUSA; btnPlay.setAttribute('aria-label','Pausar'); disco.classList.add('girando'); });
-audio.addEventListener('pause', () => { btnPlay.innerHTML = ICONO_PLAY;  btnPlay.setAttribute('aria-label','Reproducir'); disco.classList.remove('girando'); });
-
-/* Precarga la primera pista */
-cargarPista(0, false);
 
 /* ------------------------------------------------------------
    PANTALLA DE CARGA
